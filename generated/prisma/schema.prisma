@@ -1,0 +1,219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Region {
+  id_region Int      @id @default(autoincrement()) @map("id_region")
+  nombre    String   @db.VarChar(50)
+  Ciudad    Ciudad[] @relation("RegionCiudad")
+
+  @@map("region")
+}
+
+model Ciudad {
+  id_ciudad Int      @id @default(autoincrement()) @map("id_ciudad")
+  nombre    String   @db.VarChar(50)
+  id_region Int
+  Region    Region   @relation("RegionCiudad", fields: [id_region], references: [id_region])
+  Comuna    Comuna[] @relation("CiudadComuna")
+
+  @@map("ciudad")
+}
+
+model Comuna {
+  id_comuna Int         @id @default(autoincrement()) @map("id_comuna")
+  nombre    String      @db.VarChar(50)
+  id_ciudad Int
+  Ciudad    Ciudad      @relation("CiudadComuna", fields: [id_ciudad], references: [id_ciudad])
+  Direccion Direccion[]
+
+  @@map("comuna")
+}
+
+model Direccion {
+  id_direccion Int      @id @default(autoincrement()) @map("id_direccion")
+  calle        String   @db.VarChar(100)
+  numero       String   @db.VarChar(20)
+  id_comuna    Int
+  Comuna       Comuna   @relation(fields: [id_comuna], references: [id_comuna])
+  Usuario      Usuario? @relation
+  Pyme         Pyme?    @relation
+
+  @@map("direccion")
+}
+
+model Rol {
+  id_rol      Int       @id @default(autoincrement())
+  nombre      String    @db.VarChar(50)
+  descripcion String?
+  Usuario     Usuario[]
+  Permiso     Permiso[]
+
+  @@map("rol")
+}
+
+model Usuario {
+  id_usuario     Int              @id @default(autoincrement())
+  nombre         String           @db.VarChar(100)
+  email          String           @unique @db.VarChar(100)
+  password       String           @db.VarChar(255)
+  fecha_registro DateTime         @default(now())
+  ultimo_login   DateTime?
+  esta_activo    Boolean          @default(true)
+  id_direccion   Int?             @unique
+  Direccion      Direccion?       @relation(fields: [id_direccion], references: [id_direccion])
+  id_rol         Int
+  Rol            Rol              @relation(fields: [id_rol], references: [id_rol])
+  Pyme           Pyme?            @relation
+  CarroDeCompras CarroDeCompras[]
+  ListaDeDeseos  ListaDeDeseos?   @relation
+  Valoracion     Valoracion[]
+
+  @@map("usuario")
+}
+
+model Permiso {
+  id_permiso  Int     @id @default(autoincrement()) @map("id_permiso")
+  nombre      String  @db.VarChar(50)
+  descripcion String?
+  id_rol      Int?
+  Rol         Rol?    @relation(fields: [id_rol], references: [id_rol])
+
+  @@map("permiso")
+}
+
+model Pyme {
+  id_pyme      Int        @id @default(autoincrement())
+  nombre       String     @db.VarChar(100)
+  rut          String     @db.VarChar(20)
+  descripcion  String?    @db.VarChar(255)
+  id_usuario   Int        @unique
+  Usuario      Usuario    @relation(fields: [id_usuario], references: [id_usuario])
+  id_direccion Int        @unique
+  Direccion    Direccion  @relation(fields: [id_direccion], references: [id_direccion])
+  Producto     Producto[]
+
+  @@map("pyme")
+}
+
+model CategoriaDeProducto {
+  id_categoria_producto Int        @id @default(autoincrement()) @map("id_categoria_producto")
+  nombre                String     @db.VarChar(50)
+  descripcion           String?
+  Producto              Producto[]
+
+  @@map("categoria_de_producto")
+}
+
+model Producto {
+  id_producto           Int                   @id @default(autoincrement()) @map("id_producto")
+  nombre                String                @db.VarChar(100)
+  descripcion           String?
+  precio                Decimal               @db.Decimal(12, 0)
+  stock                 Int
+  estado                String                @db.VarChar(20)
+  fecha_publicacion     DateTime              @default(now())
+  fecha_actualizacion   DateTime              @default(now())
+  img_url               String?               @db.VarChar(255)
+  id_pyme               Int
+  Pyme                  Pyme                  @relation(fields: [id_pyme], references: [id_pyme])
+  id_categoria_producto Int
+  CategoriaDeProducto   CategoriaDeProducto   @relation(fields: [id_categoria_producto], references: [id_categoria_producto])
+  DetalleCarroCompras   DetalleCarroCompras[]
+  DetalleListaDeseos    DetalleListaDeseos[]
+  Valoracion            Valoracion[]
+
+  @@map("producto")
+}
+
+model CarroDeCompras {
+  id_carro_compras    Int                   @id @default(autoincrement()) @map("id_carro_compras")
+  fecha               DateTime              @default(now())
+  total               Decimal               @db.Decimal(12, 0)
+  estado              String                @db.VarChar(20)
+  id_usuario          Int
+  Usuario             Usuario               @relation(fields: [id_usuario], references: [id_usuario])
+  Venta               Venta?                @relation
+  DetalleCarroCompras DetalleCarroCompras[]
+
+  @@map("carro_de_compras")
+}
+
+model DetalleCarroCompras {
+  id_detalle_carro_compras Int            @id @default(autoincrement()) @map("id_detalle_carro_compras")
+  cantidad                 Int
+  id_producto              Int
+  Producto                 Producto       @relation(fields: [id_producto], references: [id_producto])
+  id_carro_compras         Int
+  CarroDeCompras           CarroDeCompras @relation(fields: [id_carro_compras], references: [id_carro_compras])
+
+  @@map("detalle_carro_compras")
+}
+
+model ListaDeDeseos {
+  id_lista_deseo     Int                  @id @default(autoincrement()) @map("id_lista_deseo")
+  fecha_creacion     DateTime             @default(now())
+  id_usuario         Int                  @unique
+  Usuario            Usuario              @relation(fields: [id_usuario], references: [id_usuario])
+  DetalleListaDeseos DetalleListaDeseos[]
+
+  @@map("lista_de_deseos")
+}
+
+model DetalleListaDeseos {
+  id_detalle_lista_deseos Int           @id @default(autoincrement()) @map("id_detalle_lista_deseos")
+  fecha_agregado          DateTime      @default(now())
+  id_lista_deseo          Int
+  ListaDeDeseos           ListaDeDeseos @relation(fields: [id_lista_deseo], references: [id_lista_deseo])
+  id_producto             Int
+  Producto                Producto      @relation(fields: [id_producto], references: [id_producto])
+
+  @@map("detalle_lista_deseos")
+}
+
+model Valoracion {
+  id_valoracion Int      @id @default(autoincrement()) @map("id_valoracion")
+  puntaje       Int
+  comentario    String?
+  fecha         DateTime @default(now())
+  id_usuario    Int
+  Usuario       Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+  id_producto   Int
+  Producto      Producto @relation(fields: [id_producto], references: [id_producto])
+
+  @@unique([id_usuario, id_producto])
+  @@map("valoracion")
+}
+
+model MetodoPago {
+  id_metodo_pago Int     @id @default(autoincrement()) @map("id_metodo_pago")
+  tipo           String  @db.VarChar(50)
+  descripcion    String?
+  Venta          Venta[]
+
+  @@map("metodo_pago")
+}
+
+model Venta {
+  id_venta         Int            @id @default(autoincrement()) @map("id_venta")
+  monto_total      Decimal        @db.Decimal(12, 0)
+  fecha_venta      DateTime       @default(now())
+  id_carro_compras Int            @unique
+  CarroDeCompras   CarroDeCompras @relation(fields: [id_carro_compras], references: [id_carro_compras])
+  id_metodo_pago   Int
+  MetodoPago       MetodoPago     @relation(fields: [id_metodo_pago], references: [id_metodo_pago])
+
+  @@map("venta")
+}
