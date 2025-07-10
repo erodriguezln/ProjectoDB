@@ -29,7 +29,7 @@ export async function validateAuthToken(token: string): Promise<AuthUser | null>
 	try {
 		const usuario = await prisma.usuario.findFirst({
 			where: {
-				auth_token: hashedToken,
+				auth_token: token, // no consigue hacer match con hashToken
 				esta_activo: true
 			},
 			include: { Rol: true }
