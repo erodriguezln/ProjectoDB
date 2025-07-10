@@ -2,8 +2,12 @@ import { json } from '@sveltejs/kit';
 import { prisma } from '$lib/prisma';
 import type { RequestHandler } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async (event) => {
 	try {
+		// User is already authenticated via hooks.server.ts
+		const user = event.locals.user;
+
+		const { params } = event;
 		const idParam = params.id;
 
 		if (!idParam) {

@@ -68,6 +68,8 @@ model Usuario {
     nombre         String           @db.VarChar(100)
     email          String           @unique @db.VarChar(100)
     password       String           @db.VarChar(255)
+    auth_token     String?          @unique @db.VarChar(255)
+    token_expires  DateTime?
     fecha_registro DateTime         @default(now())
     ultimo_login   DateTime?
     esta_activo    Boolean          @default(true)

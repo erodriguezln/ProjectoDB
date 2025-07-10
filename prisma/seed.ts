@@ -1,6 +1,18 @@
 import { PrismaClient } from '@prisma/client';
+import { hashToken } from '../src/lib/auth';
 
 const prisma = new PrismaClient();
+
+// Tokens estáticos predefinidos (nunca cambiarán)
+const STATIC_TOKENS = {
+	admin: 'admin-token-123456789',
+	juan: 'juan-token-123456789',
+	maria: 'maria-token-123456789',
+	pedro: 'pedro-token-123456789',
+	ana: 'ana-token-123456789',
+	carlos: 'carlos-token-123456789',
+	sofia: 'sofia-token-123456789'
+};
 
 async function main() {
 	console.log('🌱 Iniciando seed de la base de datos...');
@@ -75,87 +87,167 @@ async function main() {
 
 	// 6. USUARIOS
 	console.log('👤 Creando usuarios...');
-	const usuarios = await prisma.usuario.createMany({
-		data: [
-			{
-				id_usuario: 1,
-				nombre: 'Admin Sistema',
-				email: 'admin@dbd.cl',
-				password: 'admin123',
-				fecha_registro: new Date('2025-07-08T18:22:55.854Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.854Z'),
-				esta_activo: true,
-				id_direccion: 1,
-				id_rol: 1
-			},
-			{
-				id_usuario: 2,
-				nombre: 'Juan Pyme',
-				email: 'juan.tech@pyme.cl',
-				password: 'pyme123',
-				fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
-				esta_activo: true,
-				id_direccion: 2,
-				id_rol: 2
-			},
-			{
-				id_usuario: 3,
-				nombre: 'Maria Comercio',
-				email: 'maria.comercio@pyme.cl',
-				password: 'pyme456',
-				fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
-				esta_activo: true,
-				id_direccion: 3,
-				id_rol: 2
-			},
-			{
-				id_usuario: 4,
-				nombre: 'Pedro Ventas',
-				email: 'pedro.ventas@pyme.cl',
-				password: 'pyme789',
-				fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
-				esta_activo: true,
-				id_direccion: 4,
-				id_rol: 2
-			},
-			{
-				id_usuario: 5,
-				nombre: 'Ana Cliente',
-				email: 'ana.cliente@gmail.com',
-				password: 'cliente123',
-				fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
-				esta_activo: true,
-				id_direccion: 5,
-				id_rol: 3
-			},
-			{
-				id_usuario: 6,
-				nombre: 'Carlos Cliente',
-				email: 'carlos.cliente@gmail.com',
-				password: 'cliente456',
-				fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
-				esta_activo: true,
-				id_direccion: 6,
-				id_rol: 3
-			},
-			{
-				id_usuario: 7,
-				nombre: 'Sofia Cliente',
-				email: 'sofia.cliente@gmail.com',
-				password: 'cliente789',
-				fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
-				ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
-				esta_activo: true,
-				id_direccion: 7,
-				id_rol: 3
-			}
-		]
+
+	// Create users individually so we can generate tokens
+	const admin = await prisma.usuario.create({
+		data: {
+			id_usuario: 1,
+			nombre: 'Admin Sistema',
+			email: 'admin@dbd.cl',
+			password: 'admin123',
+			fecha_registro: new Date('2025-07-08T18:22:55.854Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.854Z'),
+			esta_activo: true,
+			id_direccion: 1,
+			id_rol: 1
+		}
 	});
+
+	const juan = await prisma.usuario.create({
+		data: {
+			id_usuario: 2,
+			nombre: 'Juan Pyme',
+			email: 'juan.tech@pyme.cl',
+			password: 'pyme123',
+			fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
+			esta_activo: true,
+			id_direccion: 2,
+			id_rol: 2
+		}
+	});
+
+	const maria = await prisma.usuario.create({
+		data: {
+			id_usuario: 3,
+			nombre: 'Maria Comercio',
+			email: 'maria.comercio@pyme.cl',
+			password: 'pyme456',
+			fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
+			esta_activo: true,
+			id_direccion: 3,
+			id_rol: 2
+		}
+	});
+
+	const pedro = await prisma.usuario.create({
+		data: {
+			id_usuario: 4,
+			nombre: 'Pedro Ventas',
+			email: 'pedro.ventas@pyme.cl',
+			password: 'pyme789',
+			fecha_registro: new Date('2025-07-08T18:22:55.861Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.861Z'),
+			esta_activo: true,
+			id_direccion: 4,
+			id_rol: 2
+		}
+	});
+
+	const ana = await prisma.usuario.create({
+		data: {
+			id_usuario: 5,
+			nombre: 'Ana Cliente',
+			email: 'ana.cliente@gmail.com',
+			password: 'cliente123',
+			fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
+			esta_activo: true,
+			id_direccion: 5,
+			id_rol: 3
+		}
+	});
+
+	const carlos = await prisma.usuario.create({
+		data: {
+			id_usuario: 6,
+			nombre: 'Carlos Cliente',
+			email: 'carlos.cliente@gmail.com',
+			password: 'cliente456',
+			fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
+			esta_activo: true,
+			id_direccion: 6,
+			id_rol: 3
+		}
+	});
+
+	const sofia = await prisma.usuario.create({
+		data: {
+			id_usuario: 7,
+			nombre: 'Sofia Cliente',
+			email: 'sofia.cliente@gmail.com',
+			password: 'cliente789',
+			fecha_registro: new Date('2025-07-08T18:22:55.868Z'),
+			ultimo_login: new Date('2025-07-08T18:22:55.868Z'),
+			esta_activo: true,
+			id_direccion: 7,
+			id_rol: 3
+		}
+	});
+
+	// Generate tokens
+	console.log('🔑 Configurando tokens');
+
+	await prisma.usuario.update({
+		where: { id_usuario: admin.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.admin)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: juan.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.juan)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: maria.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.maria)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: pedro.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.pedro)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: ana.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.ana)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: carlos.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.carlos)
+		}
+	});
+
+	await prisma.usuario.update({
+		where: { id_usuario: sofia.id_usuario },
+		data: {
+			auth_token: hashToken(STATIC_TOKENS.sofia)
+		}
+	});
+
+	console.log('\n📋 TOKENS PARA POSTMAN:');
+	console.log(`👑 Admin (${admin.email}): ${STATIC_TOKENS.admin}`);
+	console.log(`🏢 Juan PYME (${juan.email}): ${STATIC_TOKENS.juan}`);
+	console.log(`🏢 Maria PYME (${maria.email}): ${STATIC_TOKENS.maria}`);
+	console.log(`🏢 Pedro PYME (${pedro.email}): ${STATIC_TOKENS.pedro}`);
+	console.log(`👤 Ana Cliente (${ana.email}): ${STATIC_TOKENS.ana}`);
+	console.log(`👤 Carlos Cliente (${carlos.email}): ${STATIC_TOKENS.carlos}`);
+	console.log(`👤 Sofia Cliente (${sofia.email}): ${STATIC_TOKENS.sofia}`);
+	console.log();
 
 	// 7. PERMISOS
 	console.log('🔐 Creando permisos...');

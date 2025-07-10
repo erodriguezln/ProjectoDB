@@ -2,8 +2,11 @@ import { json } from '@sveltejs/kit';
 import { prisma } from '$lib/prisma';
 import type { RequestHandler } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async (event) => {
 	try {
+		// User is already authenticated via hooks.server.ts
+		const user = event.locals.user;
+
 		const productos = await prisma.producto.findMany({
 			include: {
 				CategoriaDeProducto: true,
@@ -21,7 +24,8 @@ export const GET: RequestHandler = async () => {
 		return json({
 			success: true,
 			data: productos,
-			total: productos.length
+			total: productos.length,
+			user: user?.nombre // Optional: include user info in response
 		});
 	} catch (error) {
 		console.error('Error al obtener productos:', error);
