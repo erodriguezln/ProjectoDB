@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { prisma } from '$lib/prisma';
 import type { RequestHandler } from '@sveltejs/kit';
+import { requireUserOwnsPyme } from '$lib/check_pyme_access';
 
 // index
 export const GET: RequestHandler = async (event) => {
@@ -9,6 +10,8 @@ export const GET: RequestHandler = async (event) => {
 		const user = event.locals.user;
 		const { params } = event;
     const pymeId = parseInt(params.pymeId);
+
+    await requireUserOwnsPyme(user.id_usuario, pymeId);
 
 		const productos = await prisma.producto.findMany({
       where: {
@@ -49,8 +52,11 @@ export const GET: RequestHandler = async (event) => {
 export const POST: RequestHandler = async (event) => {
   try {
     const { request, params } = event;
+		const user = event.locals.user;
     const pymeId = parseInt(params.pymeId);
     const body = await request.json();
+
+    await requireUserOwnsPyme(user.id_usuario, pymeId);
 
     // Sanitizar body y evitar campos inesperados
     const {

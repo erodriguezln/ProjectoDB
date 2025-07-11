@@ -1,13 +1,17 @@
 import { json } from '@sveltejs/kit';
 import { prisma } from '$lib/prisma';
 import type { RequestHandler } from '@sveltejs/kit';
+import { requireUserOwnsPyme } from '$lib/check_pyme_access';
 
 export const PUT: RequestHandler = async (event) => {
   try {
     const { request, params } = event;
+		const user = event.locals.user;
     const pymeId = parseInt(params.pymeId);
     const id_producto = parseInt(params.productoId);
     const body = await request.json();
+
+    await requireUserOwnsPyme(user.id_usuario, pymeId);
 
     const updatedProducto = await prisma.producto.update({
       where: {
@@ -36,6 +40,10 @@ export const DELETE: RequestHandler = async (event) => {
   try {
     const { params } = event;
     const id_producto = parseInt(params.productoId);
+    const pymeId = parseInt(params.pymeId);
+		const user = event.locals.user;
+
+    await requireUserOwnsPyme(user.id_usuario, pymeId);
 
     await prisma.producto.delete({
       where: {
