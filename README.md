@@ -4,6 +4,9 @@ npx prisma generate
 npx prisma migrate dev
 npx prisma db seed
 npm run dev
+
+para ejecutar prisma studio
+npx prisma studio
 ```
 
 ```yaml
